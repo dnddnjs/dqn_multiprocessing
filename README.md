@@ -3,12 +3,12 @@ multi-processing version of dqn on cartpole and atari game
 it only takes 1 minute to solve CartPole-v1 of openai gym
 
 # Dependencies
-Python 3.5
-Tensorflow
-Keras
-h5py
-numpy
-gym
+* Python 3.5
+* Tensorflow
+* Keras
+* h5py
+* numpy
+* gym
 
 # Basic Idea
 Idea is simple. Just seperate agent into two process. One is to interact with
