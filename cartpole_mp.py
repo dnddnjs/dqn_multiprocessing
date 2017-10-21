@@ -60,7 +60,7 @@ class DQNAgent:
             return np.argmax(q_value[0])
 
 
-def actor(q1, q2):
+def actor(q1, q2, q3):
     print('start process 1')
     env = gym.make('CartPole-v1')
     state_size = env.observation_space.shape[0]
@@ -102,7 +102,7 @@ def actor(q1, q2):
             state = next_state
 
             if done:
-                sleep(0.1)
+                sleep(0.05)
                 score = score if score == 500 else score + 100
                 print("episode:", e, "  score:", score, "  epsilon:", agent.epsilon)
                 scores.append(score)
@@ -110,27 +110,24 @@ def actor(q1, q2):
                 # 이전 10개 에피소드의 점수 평균이 490보다 크면 학습 중단
                 if np.mean(scores[-min(10, len(scores)):]) > 490:
                     agent.model.save_weights("./save_model/cartpole_mp.h5")
-                    q1.put(None)
+                    q3.put(True)
                     sys.exit()
 
 
-def learner(q1, q2):
+def learner(q1, q2, q3):
     print('start process 2')
-    replay_memory = deque(maxlen=3000)
+    replay_memory = deque(maxlen=5000)
     agent = DQNAgent(4, 2)
-    stop = False
+    count = 0
 
-    for count in range(100000):
-        sleep(0.005)
-
+    while True:
+        count += 1
         while q1.qsize() > 0:
             sample = q1.get()
-            if sample is None:
-                stop = True
             replay_memory.append(sample)
 
-        if stop:
-            break
+        if q3.qsize() > 0:
+            sys.exit()
 
         if len(replay_memory) > 1000:
             mini_batch = random.sample(replay_memory, agent.batch_size)
@@ -164,7 +161,7 @@ def learner(q1, q2):
             model = agent.model.get_weights()
             q2.put(model)
 
-            if (count % 50) == 0:
+            if (count % 300) == 0:
                 print('update target model')
                 agent.target_model.set_weights(agent.model.get_weights())
 
@@ -172,15 +169,18 @@ def learner(q1, q2):
 if __name__ == '__main__':
     memory = Queue()
     model = Queue()
-    process_one = Process(target=actor, args=(memory, model))
-    process_two = Process(target=learner, args=(memory, model))
+    end = Queue()
+    process_one = Process(target=actor, args=(memory, model, end))
+    process_two = Process(target=learner, args=(memory, model, end))
     process_one.start()
     process_two.start()
 
     memory.close()
     model.close()
+    end.close()
     memory.join_thread()
     model.join_thread()
+    end.close()
 
     process_one.join()
     process_two.join()
