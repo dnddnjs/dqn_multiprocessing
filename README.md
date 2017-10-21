@@ -28,9 +28,8 @@ code uses three queue to share information between actor(interacting process)
 * queue 3 : indicator whether learning is over or not
 
 # How to train
-'''
-python cartpole_mp.py
-'''
+    python cartpole_mp.py
+
 
 # Future do
 I will implement multi-processing on Atari game!
