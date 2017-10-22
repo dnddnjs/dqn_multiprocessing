@@ -24,14 +24,12 @@ class DQNAgent:
         self.action_size = action_size
         # DQN 하이퍼파라미터
         self.discount_factor = 0.99
-        self.learning_rate = 0.001
         self.epsilon = 1.
         self.epsilon_start, self.epsilon_end = 1.0, 0.1
-        self.exploration_steps = 1000000.
+        self.exploration_steps = 500000.
         self.epsilon_decay_step = (self.epsilon_start - self.epsilon_end) \
                                   / self.exploration_steps
         self.batch_size = 32
-        self.update_target_rate = 10000
         self.discount_factor = 0.99
         # 리플레이 메모리, 최대 크기 400000
         self.no_op_steps = 30
@@ -212,7 +210,7 @@ def actor(q1, q2, q3):
                 scores.append(score)
 
                 # 이전 10개 에피소드의 점수 평균이 490보다 크면 학습 중단
-                if np.mean(scores[-min(10, len(scores)):]) > 200:
+                if np.mean(scores[-min(10, len(scores)):]) > 100:
                     agent.model.save_weights("./save_model/breakout_mp.h5")
                     q3.put(True)
                     sys.exit()
@@ -220,7 +218,7 @@ def actor(q1, q2, q3):
 
 def learner(q1, q2, q3):
     print('start process 2')
-    replay_memory = deque(maxlen=400000)
+    replay_memory = deque(maxlen=200000)
     agent = DQNAgent(action_size=3)
     count = 0
 
@@ -265,7 +263,7 @@ def learner(q1, q2, q3):
             q2.put(model)
 
             # update per 1000 train is approximately 10000 step in env
-            if (count % 1000) == 0:
+            if (count % 300) == 0:
                 print('update target model')
                 agent.target_model.set_weights(agent.model.get_weights())
 
