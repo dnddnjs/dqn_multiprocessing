@@ -189,19 +189,12 @@ def actor(q1, q2, q3):
             else:
                 history = next_history
 
+            if global_step > 50000:
+                print('waiting for process 2, now q size is ', q1.qsize())
+                while q1.qsize() > 100:
+                    sleep(0.0001)
+
             if done:
-                # 각 에피소드 당 학습 정보를 기록
-                if global_step > 50000:
-                    stats = [score, agent.avg_q_max / float(step), step]
-
-                    for i in range(len(stats)):
-                        agent.sess.run(agent.update_ops[i], feed_dict={
-                            agent.summary_placeholders[i]: float(stats[i])
-                        })
-
-                    summary_str = agent.sess.run(agent.summary_op)
-                    agent.summary_writer.add_summary(summary_str, e + 1)
-
                 print("episode:", e, "  score:", score, "  epsilon:",
                       agent.epsilon, "  global_step:", global_step,
                       "  average_q:", agent.avg_q_max / float(step))
@@ -263,7 +256,7 @@ def learner(q1, q2, q3):
             q2.put(model)
 
             # update per 1000 train is approximately 10000 step in env
-            if (count % 300) == 0:
+            if (count % 500) == 0:
                 print('update target model')
                 agent.target_model.set_weights(agent.model.get_weights())
 
